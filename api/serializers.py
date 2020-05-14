@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from api.models import Book, Press
+from api.models import Book, Press, Fanju
 
 
 class PressModelSerializer(serializers.ModelSerializer):
@@ -52,3 +52,20 @@ class BookModelSerializerV2(serializers.ModelSerializer):
             raise serializers.ValidationError("该出版社已经发布过该图书")
 
         return attrs
+
+class FanjuSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Fanju
+        fields = ("name","author","mount")
+        extra_kwargs = {
+            "name": {
+                "required": True,
+                "min_length": 2,
+                "error_messages": {
+                    "required": "番剧名是必填的",
+                    "min_length": "番剧名长度不够"
+                                    }
+                    },
+            "authors": {"required": True, },
+            "mount": {"required": True, },
+        }

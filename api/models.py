@@ -80,3 +80,14 @@ class AuthorDetail(BaseModel):
 
     def __str__(self):
         return "%s的详情" % self.author.author_name
+
+#作业表
+class Fanju(models.Model):
+    name = models.CharField(max_length=30)
+    author = models.CharField(max_length=20)
+    is_delete = models.BooleanField(default=False)
+    mount = models.IntegerField()
+    pic = models.ImageField(upload_to="img", default="img/1.jpg")
+
+    class Meta:
+        db_table = "z_fanju"

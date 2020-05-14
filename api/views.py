@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api import serializers
-from api.models import Book
+from api.models import Book, Fanju
 
 
 class BookAPIVIewV2(APIView):
@@ -164,4 +164,120 @@ class BookAPIVIewV2(APIView):
             # 则修改完成的对象返回到前台，需要经过序列化器序列化
             "results": serializers.BookModelSerializerV2(book_obj).data
         })
+
+
+#番剧表
+class Fanjuview(APIView):
+    def get(self,request, *args, **kwargs):
+        fanju_id = kwargs.get("id")
+
+        if fanju_id:
+            try:
+                fanju_obj = Fanju.objects.get(pk=fanju_id, is_delete=False)
+                fanju_ser = serializers.FanjuSerializers(fanju_obj).data
+                return Response({
+                    "status": 200,
+                    "message": "查询番剧成功",
+                    "results": fanju_ser
+                })
+            except:
+                return Response({
+                    "status": 400,
+                    "message": "查询番剧不存在",
+                })
+        else:
+            fanju_list = Fanju.objects.filter(is_delete=False)
+            fanju_data = serializers.FanjuSerializers(fanju_list, many=True).data
+
+            return Response({
+                "status": 200,
+                "message": "查询番剧列表成功",
+                "results": fanju_data
+            })
+
+    def post(self,request, *args, **kwargs):
+        request_data = request.data
+        if isinstance(request_data, dict):
+            many = False
+        elif isinstance(request_data, list):
+            many = True
+        else:
+            return Response({
+                "status": 300,
+                "message": "数据格式有误",
+            })
+
+        fanju_ser = serializers.FanjuSerializers(data=request_data, many=many)
+        fanju_ser.is_valid(raise_exception=True)
+        fanju_obj = fanju_ser.save()
+
+        return Response({
+            "status": 200,
+            "message": "success",
+            "results": serializers.FanjuSerializers(fanju_obj, many=many).data
+        })
+
+    def delete(self,request, *args, **kwargs):
+        fanju_id = kwargs.get("id")
+        if fanju_id:
+            ids = [fanju_id]
+        else:
+            ids = request.data.get("ids")
+        res = Fanju.objects.filter(pk__in=ids, is_delete=False).update(is_delete=True)
+        if res:
+            return Response({
+                "status": 200,
+                "message": "删除成功",
+            })
+
+        return Response({
+            "status": 500,
+            "message": "删除失败或者已删除",
+        })
+
+    def put(self,request, *args, **kwargs):
+        request_data = request.data
+        fanju_id = kwargs.get("id")
+
+        try:
+            fanju_obj = Fanju.objects.get(pk=fanju_id, is_delete=False)
+        except:
+            return Response({
+                "status": 500,
+                "message": "番剧不存在",
+            })
+        fanju_ser = serializers.FanjuSerializers(data=request_data, instance=fanju_obj, partial=False)
+        fanju_ser.is_valid(raise_exception=True)
+
+        fanju_ser.save()
+
+        return Response({
+            "status": 200,
+            "message": "更新成功",
+            "results": serializers.FanjuSerializers(fanju_obj).data
+        })
+
+    def patch(self,request, *args, **kwargs):
+        request_data = request.data
+        fanju_id = kwargs.get("id")
+        try:
+            fanju_obj = Fanju.objects.get(pk=fanju_id, is_delete=False)
+        except:
+            return Response({
+                "status": 500,
+                "message": "番剧不存在",
+            })
+        fanju_ser = serializers.FanjuSerializers(data=request_data, instance=fanju_obj, partial=True)
+
+        fanju_ser.is_valid(raise_exception=True)
+
+        fanju_ser.save()
+
+        return Response({
+            "status": 200,
+            "message": "更新成功",
+            "results": serializers.FanjuSerializers(fanju_obj).data
+        })
+
+
 
